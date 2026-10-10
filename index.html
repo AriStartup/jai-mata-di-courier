@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JAI MATA DI ENTERPRISES - Courier Bill / Receipt Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2.1">
+  <!-- Local html2pdf bundle for reliable offline generation -->
+  <script src="assets/html2pdf.bundle.min.js"></script>
+  <!-- Embedded base64 logo & signature -->
+  <script src="assets/logo_base64.js"></script>
+  <script src="assets/signature_base64.js"></script>
+</head>
+<body>
+  <!-- Top App Navigation Bar -->
+  <header class="app-header no-print">
+    <div class="header-container">
+      <div class="brand-info">
+        <div class="brand-badge">JMD</div>
+        <div class="brand-text">
+          <h1>JAI MATA DI ENTERPRISES</h1>
+          <p class="subtitle">Official Courier Bill & Receipt PDF Generator (Jetline Couriers)</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="btnFillSample" class="btn btn-outline" title="Fill test data from specifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Fill Test Data
+        </button>
+        <button type="button" id="btnResetTop" class="btn btn-secondary" title="Clear all user-entered data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          Reset
+        </button>
+        <button type="button" id="btnPrintTop" class="btn btn-primary" title="Print receipt or save via browser print dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print Receipt
+        </button>
+        <button type="button" id="btnGenerateTop" class="btn btn-accent" title="Generate and download A4 PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Generate A4 PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-layout">
+    <!-- LEFT PANEL: DATA ENTRY FORM -->
+    <section class="form-panel no-print">
+      <div class="panel-header">
+        <h2>Enter Courier Bill Details</h2>
+        <span class="status-indicator"><span class="pulse-dot"></span> Live Sync Enabled</span>
+      </div>
+
+      <div id="validationAlert" class="alert-box alert-error hidden">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div id="validationMessage">Please complete all required fields before generating the PDF.</div>
+      </div>
+
+      <form id="receiptForm" autocomplete="off" onsubmit="return false;">
+        <!-- Section 1: Bill Information -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="step-num">1</span>
+            <h3>Bill Information</h3>
+          </div>
+          <div class="form-grid grid-2">
+            <div class="form-group">
+              <label for="trackingNo">Tracking No. <span class="required">*</span></label>
+              <input type="text" id="trackingNo" placeholder="e.g. 14847603" required>
+            </div>
+            <div class="form-group">
+              <label for="billDate">Date <span class="required">*</span></label>
+              <input type="date" id="billDate" required>
+            </div>
+            <div class="form-group">
+              <label for="origin">Origin <span class="required">*</span></label>
+              <input type="text" id="origin" placeholder="e.g. Tajpur" required>
+            </div>
+            <div class="form-group">
+              <label for="destination">Destination <span class="required">*</span></label>
+              <input type="text" id="destination" placeholder="e.g. Gurgaon" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Sender Details -->
+        <div class="form-card">
+          <div class="form-card-header card-header-blue">
+            <span class="step-num bg-blue">2</span>
+            <h3>Sender Details (भेजने वाला)</h3>
+          </div>
+          <div class="form-grid grid-2">
+            <div class="form-group">
+              <label for="senderName">Sender Name <span class="required">*</span></label>
+              <input type="text" id="senderName" placeholder="Full name of sender" required>
+            </div>
+            <div class="form-group">
+              <label for="senderPhone">Sender Phone <span class="required">*</span></label>
+              <input type="text" id="senderPhone" placeholder="Mobile / Phone (or NA)" required>
+            </div>
+            <div class="form-group full-width">
+              <label for="senderAddress">Sender Address <span class="required">*</span></label>
+              <textarea id="senderAddress" rows="2" placeholder="Complete street address, ward, PO, city" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="senderPincode">Sender Pincode <span class="required">*</span></label>
+              <input type="text" id="senderPincode" placeholder="e.g. 848131" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Receiver Details -->
+        <div class="form-card">
+          <div class="form-card-header card-header-green">
+            <span class="step-num bg-green">3</span>
+            <h3>Receiver Details (पाने वाला)</h3>
+          </div>
+          <div class="form-grid grid-2">
+            <div class="form-group">
+              <label for="receiverName">Receiver Name <span class="required">*</span></label>
+              <input type="text" id="receiverName" placeholder="Full name of receiver" required>
+            </div>
+            <div class="form-group">
+              <label for="receiverPhone">Receiver Phone <span class="required">*</span></label>
+              <input type="text" id="receiverPhone" placeholder="Mobile / Phone number" required>
+            </div>
+            <div class="form-group full-width">
+              <label for="receiverAddress">Receiver Address <span class="required">*</span></label>
+              <textarea id="receiverAddress" rows="2" placeholder="Complete delivery address, landmark, area" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="receiverPincode">Receiver Pincode <span class="required">*</span></label>
+              <input type="text" id="receiverPincode" placeholder="e.g. 122012 (Gurgaon)" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Item Details & Dynamic Quantity -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="step-num">4</span>
+            <div class="flex-between w-full">
+              <h3>Item / Parcel Details</h3>
+              <div class="quantity-controller">
+                <label for="parcelQuantity">Number of Items (Quantity):</label>
+                <div class="counter-input">
+                  <button type="button" id="btnQtyMinus" class="btn-counter" title="Decrease Quantity">-</button>
+                  <input type="number" id="parcelQuantity" min="1" max="10" value="1" required>
+                  <button type="button" id="btnQtyPlus" class="btn-counter" title="Increase Quantity">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Item Containers -->
+          <div id="itemsContainer" class="items-list">
+            <!-- Dynamic item blocks injected here via JS -->
+          </div>
+        </div>
+
+        <!-- Section 5: Charges & Calculation -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="step-num">5</span>
+            <h3>Charges & Total Calculation</h3>
+          </div>
+          <div class="form-grid grid-3">
+            <div class="form-group">
+              <label for="courierCharge">Courier Charge / Rate (₹) <span class="required">*</span></label>
+              <input type="number" id="courierCharge" min="0" step="any" placeholder="e.g. 1000" required>
+            </div>
+            <div class="form-group">
+              <label for="packingCharge">Packing Charge (₹)</label>
+              <input type="number" id="packingCharge" min="0" step="any" placeholder="0">
+            </div>
+            <div class="form-group">
+              <div class="flex-between">
+                <label for="discount">Discount (%)</label>
+                <span id="discountPriceEquivalent" class="text-hint-price">₹0.00 off</span>
+              </div>
+              <div class="input-with-suffix">
+                <input type="number" id="discount" min="0" max="100" step="any" placeholder="0">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="total-summary-card">
+            <span class="total-label">CALCULATED TOTAL</span>
+            <span class="total-val" id="displayCalculatedTotal">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Bottom Form Action Buttons -->
+        <div class="form-actions-bottom">
+          <button type="button" id="btnResetBottom" class="btn btn-secondary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Reset Form
+          </button>
+          <button type="button" id="btnPrintBottom" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print Receipt
+          </button>
+          <button type="button" id="btnGenerateBottom" class="btn btn-accent btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Generate A4 PDF
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- RIGHT PANEL: LIVE RECEIPT PREVIEW (Exact match to reference) -->
+    <section class="preview-panel">
+      <div class="preview-sticky-header no-print">
+        <div class="preview-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <h3>Live Receipt Preview (A4 Match)</h3>
+        </div>
+        <div class="preview-badge-status">
+          <span class="preview-mode-tag">Real-Time Sync</span>
+        </div>
+      </div>
+
+      <!-- Scrollable Preview Area containing the A4 Receipt Container -->
+      <div class="preview-container">
+        <!-- EXACT RECEIPT ELEMENT (Rendered & Printed / Downloaded) -->
+        <div id="receiptDocument" class="receipt-a4">
+          <!-- TOP HEADER -->
+          <div class="receipt-header">
+            <!-- TOP LEFT: JETLINE LOGO -->
+            <div class="header-logo-box">
+              <img id="receiptLogoImg" class="receipt-logo" alt="Jetline Couriers Pvt. Ltd. Logo" src="assets/jetline_logo.png">
+            </div>
+
+            <!-- TOP RIGHT: JAI MATA DI ENTERPRISES INFO -->
+            <div class="header-company-info">
+              <h2 class="company-name">JAI MATA DI ENTERPRISES</h2>
+              <p class="company-address-line">HOSPITAL CHOWK (NEAR-HINDUSTAN MEDICAL HALL)</p>
+              <p class="company-address-line">RAJDHANI ROAD, TAJPUR, SAMASTIPUR - 848130</p>
+              <p class="contact-green">WhatsApp Only: 8651337137</p>
+              <p class="contact-green">Contact No: 9153369890</p>
+            </div>
+          </div>
+
+          <!-- SOLID BLUE HORIZONTAL DIVIDER LINE -->
+          <div class="header-blue-line"></div>
+
+          <!-- BILL INFORMATION BAR (Horizontal Pill) -->
+          <div class="bill-info-bar">
+            <div class="info-cell">
+              <span class="info-label">Tracking No:</span>
+              <span class="info-value" id="previewTrackingNo"></span>
+            </div>
+            <div class="info-cell">
+              <span class="info-label">Date:</span>
+              <span class="info-value" id="previewDate"></span>
+            </div>
+            <div class="info-cell origin-cell">
+              <span class="calendar-icon"></span>
+              <span class="info-label">Origin:</span>
+              <span class="info-value" id="previewOrigin"></span>
+            </div>
+            <div class="info-cell">
+              <span class="info-label">Destination:</span>
+              <span class="info-value" id="previewDestination"></span>
+            </div>
+          </div>
+
+          <!-- SENDER & RECEIVER SECTION (Side by side boxes) -->
+          <div class="parties-container">
+            <!-- SENDER BOX (Left) -->
+            <div class="party-box sender-box">
+              <div class="party-badge badge-blue">SENDER (भेजने वाला)</div>
+              <table class="party-table">
+                <tr>
+                  <td class="field-label">Name:</td>
+                  <td class="field-value" id="previewSenderName"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Phone:</td>
+                  <td class="field-value" id="previewSenderPhone"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Address:</td>
+                  <td class="field-value wrap-text" id="previewSenderAddress"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Pincode:</td>
+                  <td class="field-value" id="previewSenderPincode"></td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- RECEIVER BOX (Right) -->
+            <div class="party-box receiver-box">
+              <div class="party-badge badge-green">RECEIVER (पाने वाला)</div>
+              <table class="party-table">
+                <tr>
+                  <td class="field-label">Name:</td>
+                  <td class="field-value" id="previewReceiverName"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Phone:</td>
+                  <td class="field-value" id="previewReceiverPhone"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Address:</td>
+                  <td class="field-value wrap-text" id="previewReceiverAddress"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">Pincode:</td>
+                  <td class="field-value" id="previewReceiverPincode"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- ITEM / PARCEL SECTION TABLE -->
+          <div class="items-table-container">
+            <table class="receipt-items-table">
+              <thead>
+                <tr>
+                  <th class="col-desc">Item Description</th>
+                  <th class="col-actual">Actual Weight</th>
+                  <th class="col-dim">Dimensions (L x W x H)</th>
+                  <th class="col-vol">Volumetric Wt.</th>
+                  <th class="col-qty">Quantity</th>
+                </tr>
+              </thead>
+              <tbody id="previewItemsTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TERMS & CONDITIONS AND CHARGES SECTION -->
+          <div class="terms-charges-section">
+            <!-- Left: Fixed Terms & Conditions -->
+            <div class="terms-block">
+              <div class="terms-heading">Terms & Conditions:</div>
+              <ul class="terms-list">
+                <li>Goods carried at sender's risk.</li>
+                <li>Fragile items require proper packaging.</li>
+                <li>Contact / WhatsApp at given number if your parcel not delivered within the time period.</li>
+                <li>To track Current status of your parcel type <span class="terms-link">https://www.jetlinecouriers.in/</span></li>
+              </ul>
+            </div>
+
+            <!-- Right: Charges Box -->
+            <div class="charges-block">
+              <table class="charges-table">
+                <tr>
+                  <td class="charge-label">Courier Charge / Rate</td>
+                  <td class="charge-value" id="previewCourierCharge"></td>
+                </tr>
+                <tr>
+                  <td class="charge-label">Packing Charge</td>
+                  <td class="charge-value" id="previewPackingCharge"></td>
+                </tr>
+                <tr id="previewDiscountRow" style="display: none;">
+                  <td class="charge-label">Discount</td>
+                  <td class="charge-value" id="previewDiscount"></td>
+                </tr>
+                <tr class="total-row">
+                  <td class="total-label-cell">TOTAL AMOUNT</td>
+                  <td class="total-value-cell"><span class="total-value-pill" id="previewTotalAmount"></span></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- BOTTOM-RIGHT SIGNATURE SECTION -->
+          <div class="bottom-signature-section">
+            <div class="signature-box">
+              <div class="signature-img-container">
+                <img id="receiptSignatureImg" class="receipt-signature-img" src="assets/signature.png" alt="Authorized Signatory Signature">
+              </div>
+              <div class="signature-rule-line"></div>
+              <div class="authorized-signatory-text">Authorized Signatory</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Website Footer (Screen only, excluded from PDF and printing) -->
+  <footer class="app-footer no-print">
+    <div class="footer-container">
+      <p class="footer-text">
+        &copy; 2026 JAI MATA DI ENTERPRISES &middot; <a href="https://arijit-protfolio.netlify.app" target="_blank" rel="noopener noreferrer" class="developer-link">Crafted &amp; Developed by Arijit Sau</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js?v=2.1"></script>
+</body>
+</html>

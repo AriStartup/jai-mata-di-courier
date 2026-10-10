@@ -1,0 +1,19 @@
+{
+  "name": "jai-mata-di-courier",
+  "version": "1.0.0",
+  "description": "Official Courier Bill & Receipt PDF Generator for JAI MATA DI ENTERPRISES",
+  "scripts": {
+    "start": "python server.py"
+  },
+  "keywords": [
+    "courier",
+    "receipt",
+    "generator",
+    "pdf"
+  ],
+  "author": "JAI MATA DI ENTERPRISES",
+  "license": "ISC",
+  "dependencies": {
+    "html2pdf.js": "^0.14.0"
+  }
+}

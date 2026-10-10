@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Local Python test scripts & outputs
+*.py
+*.bat
+*.pdf
+*.png
+!assets/*.png
+test_*.png
+debug.js
+
+# OS files
+.DS_Store
+Thumbs.db
